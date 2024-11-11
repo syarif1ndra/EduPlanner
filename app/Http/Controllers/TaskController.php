@@ -1,13 +1,15 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Task;
 
+use App\Models\Task;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class TaskController extends Controller
 {
+    // 1. Menampilkan daftar tugas
     public function index(Request $request)
 {
     $query = Task::query();
@@ -45,14 +47,14 @@ class TaskController extends Controller
         }
     }
 
-    // Ambil data dengan pagination
-    $tasks = $query->paginate(10);
+    // Ambil data dengan pagination dan query string
+    $tasks = $query->paginate(10)->appends(request()->query());
 
     return view('tasks.index', compact('tasks'));
 }
 
 
-
+    // 2. Menampilkan form untuk membuat tugas baru
     public function create()
     {
         return view('tasks.create');
@@ -60,87 +62,85 @@ class TaskController extends Controller
 
     // 3. Menyimpan tugas baru
     public function store(Request $request)
-{
-    $request->validate([
-        'title' => 'required|max:255',
-        'description' => 'required',
-        'deadline' => 'required|date',
-    ]);
+    {
+        $request->validate([
+            'title' => 'required|max:255',
+            'description' => 'required',
+            'deadline' => 'required|date',
+        ]);
 
-    Task::create([
-        'title' => $request->title,
-        'description' => $request->description,
-        'deadline' => $request->deadline,
-        'is_completed' => false,
-        'user_id' => Auth::id(),  // Menyimpan ID pengguna yang sedang login
-    ]);
+        // Konversi deadline ke format datetime
+        $deadline = Carbon::parse($request->deadline)->format('Y-m-d H:i:s');
 
-    return redirect()->route('tasks.index')->with('success', 'Tugas berhasil ditambahkan!');
-}
+        Task::create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'deadline' => $deadline,
+            'is_completed' => false,
+            'user_id' => Auth::id(),
+        ]);
 
+        return redirect()->route('tasks.index')->with('success', 'Tugas berhasil ditambahkan!');
+    }
 
     // 4. Menampilkan detail tugas
     public function show(Task $task)
-{
-    if ($task->user_id !== Auth::id()) {
-        abort(403);  // Mengarahkan pengguna ke halaman error jika tugas bukan miliknya
+    {
+        if ($task->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        // Menghitung waktu yang tersisa
+        $task->time_remaining = Carbon::parse($task->deadline)->diffForHumans();
+
+        return view('tasks.show', compact('task'));
     }
-
-    return view('tasks.show', compact('task'));
-}
-
 
     // 5. Menampilkan form untuk mengedit tugas
     public function edit(Task $task)
-{
-    if ($task->user_id !== Auth::id()) {
-        abort(403);
-    }
+    {
+        if ($task->user_id !== Auth::id()) {
+            abort(403);
+        }
 
-    return view('tasks.edit', compact('task'));
-}
+        return view('tasks.edit', compact('task'));
+    }
 
     // 6. Memperbarui data tugas
     public function update(Request $request, Task $task)
-{
-    if ($task->user_id !== Auth::id()) {
-        abort(403);
+    {
+        if ($task->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'title' => 'required|max:255',
+            'description' => 'required',
+            'deadline' => 'required|date',
+        ]);
+
+        // Konversi deadline ke format datetime
+        $deadline = Carbon::parse($request->deadline)->format('Y-m-d H:i:s');
+
+        $task->update([
+            'title' => $request->title,
+            'description' => $request->description,
+            'deadline' => $deadline,
+            'is_completed' => $request->has('is_completed') ? 1 : 0,
+        ]);
+
+        return redirect()->route('tasks.index')->with('success', 'Tugas berhasil diperbarui!');
     }
-
-    $request->validate([
-        'title' => 'required|max:255',
-        'description' => 'required',
-        'deadline' => 'required|date',
-    ]);
-
-    // Memeriksa jika checkbox dicentang, nilai is_completed diubah menjadi 1, jika tidak menjadi 0
-    $task->update([
-        'title' => $request->title,
-        'description' => $request->description,
-        'deadline' => $request->deadline,
-        'is_completed' => $request->has('is_completed') ? 1 : 0,  // Menyimpan 1 jika dicentang, 0 jika tidak
-    ]);
-
-    return redirect()->route('tasks.index')->with('success', 'Tugas berhasil diperbarui!');
-}
-
 
     // 7. Menghapus tugas
     public function destroy(Task $task)
-{
-    if ($task->user_id !== Auth::id()) {
-        abort(403);
+    {
+        if ($task->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $task->delete();
+
+        return redirect()->route('tasks.index')->with('success', 'Tugas berhasil dihapus!');
     }
-
-    $task->delete();
-
-    return redirect()->route('tasks.index')->with('success', 'Tugas berhasil dihapus!');
 }
-
-
-
-
-
-}
-
-

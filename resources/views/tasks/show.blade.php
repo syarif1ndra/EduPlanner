@@ -12,6 +12,21 @@
         </span>
     </p>
 
+    <!-- Time Remaining -->
+    @if(!$task->is_completed)
+        @php
+            $deadline = \Carbon\Carbon::parse($task->deadline);
+            $now = \Carbon\Carbon::now();
+            $remaining = $now->diffForHumans($deadline, [
+                'parts' => 3, // Menampilkan hari, jam, menit
+                'join' => true, // Menggabungkan dengan "dan"
+            ]);
+        @endphp
+        <p style="color: black;"><strong>Waktu Tersisa:</strong>
+            <span class="badge bg-info">{{ $remaining }}</span>
+        </p>
+    @endif
+
     <div>
         <a href="{{ route('tasks.index') }}" class="btn btn-primary">Kembali ke Daftar Tugas</a>
         <a href="{{ route('tasks.edit', $task->id) }}" class="btn btn-primary">Edit Tugas</a>

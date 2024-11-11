@@ -20,10 +20,10 @@
                 <textarea name="description" id="description" class="form-control" required style="border-radius: 10px;">{{ old('description', $task->description) }}</textarea>
             </div>
 
-            <div class="mb-4">
-                <label for="deadline" class="form-label" style="color: black;">Tenggat Waktu</label>
-                <input type="date" name="deadline" id="deadline" value="{{ old('deadline', $task->deadline) }}" class="form-control" required style="border-radius: 10px;">
-            </div>
+            <input type="datetime-local" name="deadline" id="deadline"
+       value="{{ old('deadline', \Carbon\Carbon::parse($task->deadline)->format('Y-m-d\TH:i')) }}"
+       class="form-control" required style="border-radius: 10px;">
+
 
             <div class="form-check mb-4">
                 <input type="checkbox" name="is_completed" id="is_completed" class="form-check-input" {{ old('is_completed', $task->is_completed) ? 'checked' : '' }}>

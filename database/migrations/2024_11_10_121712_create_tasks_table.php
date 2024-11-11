@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description');
-            $table->date('deadline');
+            $table->dateTime('deadline');
             $table->boolean('is_completed')->default(false);
             $table->foreignId('user_id')->constrained();
             $table->timestamps();

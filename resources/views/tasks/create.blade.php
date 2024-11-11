@@ -18,7 +18,7 @@
             </div>
             <div class="mb-4">
                 <label for="deadline" class="form-label" style="color: black;">Tenggat Waktu</label>
-                <input type="date" class="form-control" id="deadline" name="deadline" required style="border-radius: 10px;">
+                <input type="datetime-local" class="form-control" id="deadline" name="deadline" required style="border-radius: 10px;">
             </div>
 
             <div class="text-center">
